@@ -1,101 +1,242 @@
-# LLM Papers Collector & Processor
+# AutoLitReview
 
-Research idea → OpenAlex search → LLM analysis → Automatically grouped Excel report
+**Turn a research idea into a structured literature review using OpenAlex and LLMs.**
 
-This tool automates literature discovery and organization for a research topic. Given a research idea, it:
+AutoLitReview is an AI-powered literature discovery pipeline that automatically searches, filters, analyzes, and organizes academic papers from a simple research idea description.
 
-1. Generates literature-search concepts using an LLM
-2. Searches OpenAlex for relevant papers
-3. Extracts paper summaries and target objects
-4. Filters out off-topic papers
-5. Discovers thematic categories automatically
-6. Produces a structured Excel report
+Instead of manually crafting search queries, screening dozens of papers, and organizing findings into spreadsheets, AutoLitReview uses large language models to automate much of the workflow.
+
+The result is a categorized Excel report containing relevant papers, summaries, extracted target objects, venue information, and research categories.
 
 ---
 
 ## Features
 
-- Multi-concept literature search
-- OpenAlex integration
-- DOI-based deduplication
-- Automatic abstract reconstruction
-- LLM-powered paper summarization
-- LLM-powered relevance filtering
-- Automatic taxonomy discovery
-- Excel export with categorized papers
-- Supports local and cloud-hosted LLMs
+- 🔍 Generate literature-search concepts from a research idea
+- 📚 Search OpenAlex across multiple concepts
+- 🧹 Deduplicate papers automatically
+- 🤖 Extract paper summaries using LLMs
+- 🎯 Identify the target object of each paper
+- 🚦 Filter out irrelevant search results
+- 🏷️ Automatically discover and label research themes
+- 📂 Categorize papers into the discovered themes
+- 📊 Export results to a structured Excel workbook
+- 🔌 Support local and cloud-hosted LLMs
 
 ---
-
-## Installation
-
-```bash
-pip install openai requests openpyxl
-```
-
-## Environment
-
-```bash
-export OPENALEX_API_KEY=YOUR_KEY
-```
-
-## Quick Start
-
-```bash
-python llm_papers_collector_and_processor.py \
-    "LLM-powered phishing attacks"
-```
 
 ## Workflow
 
 ```text
 Research Idea
+(typically a short research problem statement)
       │
       ▼
-Concept Extraction
+Concept Generation
+(generate literature-search concepts)
       │
       ▼
-OpenAlex Search
+OpenAlex Retrieval
+(retrieve candidate papers)
       │
       ▼
-Paper Collection & Deduplication
+Deduplication
+(remove duplicate papers)
       │
       ▼
-Phase 1: Local Analysis
-(summary + target object)
+Paper Analysis
+(summary + target object extraction)
       │
       ▼
 Relevance Filtering
+(remove unrelated papers)
       │
       ▼
-Phase 2: Global Analysis
-(category discovery + assignment)
+Theme Discovery & Categorization
+(generate research themes and assign papers)
       │
       ▼
 Excel Report
+(papers, summaries, categories, and sources)
 ```
 
-## Output
+
+---
+
+## Installation
+
+### 1. Install Dependencies
+
+```bash
+pip install openai requests openpyxl
+```
+
+### 2. Configure OpenAlex
+
+```bash
+export OPENALEX_API_KEY=YOUR_KEY
+```
+
+OpenAlex API keys are free and available from:
+
+https://openalex.org/settings/api
+
+---
+
+## Supported LLM Backends
+
+| Backend | Example Model |
+|----------|--------------|
+| Local LLM | GPT-OSS-120B |
+| OpenAI API | GPT-4o |
+| Google Gemini API | Gemini Flash |
+| Anthropic API | Claude Sonnet |
+
+The project uses OpenAI-compatible APIs, making it easy to connect local or hosted models.
+
+---
+
+## Quick Start
+
+### Local GPT-OSS via vLLM
+
+```bash
+python AutoLitReview.py \
+    "LLM-powered phishing attacks"
+```
+
+### Example: Cybersecurity Literature Search
+
+```bash
+python AutoLitReview.py \
+    "Automated OSINT-based profiling for targeted phishing" \
+    --domain cybersecurity \
+    --concepts 4 \
+    --per-concept 10 \
+    --year-from 2024
+```
+
+---
+
+## Example Output
+
+```text
+Concepts:
+['LLM phishing',
+ 'Automated OSINT',
+ 'Profile inference',
+ 'Targeted social engineering']
+
+Collected 39 unique papers
+
+Phase 1 (per-paper analysis) done
+
+Relevance gate:
+10 papers kept as on-topic
+
+Phase 2 (grouping) done
+4 categories discovered
+
+Done -> papers_grouped.xlsx
+```
+
+---
+
+## Output Structure
 
 ### Papers Sheet
 
-- Title
-- Year
-- Summary
-- Target Object
-- Category
-- Venue
-- Venue Quality
-- Source
+| Column | Description |
+|----------|-------------|
+| Title | Paper title |
+| Year | Publication year |
+| Summary | One-sentence summary |
+| Target Object | What the method acts upon |
+| Category | Automatically assigned category |
+| Venue | Publication venue |
+| Venue Quality | Core / DOAJ / Other |
+| Source | DOI or source URL |
 
-### Categories Sheet
 
-- Category Name
-- Description
+## Command Line Options
 
-## Supported Providers
+| Argument | Description |
+|-----------|-------------|
+| `--concepts` | Number of concepts to generate |
+| `--per-concept` | Papers retrieved per concept |
+| `--year-from` | Earliest publication year |
+| `--year-to` | Latest publication year |
+| `--domain` | Restrict search to an OpenAlex field |
+| `--core-only` | Keep only papers from core venues |
+| `--provider` | LLM backend (`vllm`, `openai`, `gemini`, `claude`) |
+| `--model` | Override default model |
+| `--manual-concepts` | Use custom search concepts |
+| `--out` | Output Excel filename |
 
-- vLLM (GPT-OSS)
-- OpenAI
-- Gemini
-- Claude
+---
+
+## Supported Domains
+
+```text
+cybersecurity
+computer science
+engineering
+materials science
+mathematics
+physics
+biology
+chemistry
+medicine
+psychology
+social sciences
+economics
+neuroscience
+environmental science
+```
+
+---
+
+## Why AutoLitReview?
+
+Traditional literature reviews require:
+
+- Designing search queries
+- Running multiple database searches
+- Screening papers manually
+- Extracting key information
+- Grouping papers into themes
+
+AutoLitReview automates much of this process, allowing researchers to move from a research idea to an organized literature overview in minutes.
+
+---
+
+## Typical Use Cases
+
+- Literature reviews
+- Survey paper preparation
+- PhD topic exploration
+- Research trend discovery
+- Rapid state-of-the-art analysis
+
+---
+
+## Limitations
+
+- Results depend on the coverage, metadata quality, and search relevance of OpenAlex.
+- LLM quality affects concept generation, paper summarization, relevance filtering, and thematic categorization.
+  
+---
+
+## Citation
+
+If you use AutoLitReview in academic work, please cite:
+
+- OpenAlex
+- The LLM provider used for analysis
+- This repository
+
+---
+
+## License
+
+MIT License
