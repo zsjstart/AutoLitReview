@@ -275,8 +275,6 @@ true (keep) or false (drop), e.g.: {{"0": true, "1": false, "2": true}}
 Papers:
 {block}"""
     verdicts = llm_json(prompt, temperature=0.0, max_tokens=3000)
-    
-    print("verdicts: ", verdicts)
 
     keep_idx = set()
     if isinstance(verdicts, dict):
