@@ -224,7 +224,7 @@ AutoLitReview automates much of this process, allowing researchers to move from 
 
 - Results depend on the coverage, metadata quality, and search relevance of OpenAlex.
 - LLM quality affects concept generation, paper summarization, relevance filtering, and thematic categorization.
-- Commercial LLM APIs may incur token costs, but appropriately configuring `--concepts` and `--per-concept can help control token usage and reduce expenses.
+- Commercial LLM APIs may incur token costs, but appropriately configuring `--concepts` and `--per-concept` can help control token usage and reduce expenses.
   
 ---
 
