@@ -101,7 +101,8 @@ The project uses OpenAI-compatible APIs, making it easy to connect local or host
 
 ```bash
 python AutoLitReview.py \
-    "LLM-powered phishing attacks"
+    "LLM-powered phishing attacks" \
+    --provider vllm
 ```
 
 ### Example: Cybersecurity Literature Search
@@ -112,7 +113,8 @@ python AutoLitReview.py \
     --domain cybersecurity \
     --concepts 4 \
     --per-concept 10 \
-    --year-from 2024
+    --year-from 2024 \
+    --provider vllm
 ```
 
 ---
