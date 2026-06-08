@@ -145,12 +145,14 @@ def extract_concepts(idea, n):
 Generate {n} literature-search concepts for finding papers ON THIS SPECIFIC TOPIC.
 
 Requirements:
+- Each concept must be 1–3 words.
 - Use terminology commonly found in paper titles, abstracts,
   author keywords, or research taxonomies.
 - Prefer established academic concepts.
-- Avoid synthesized descriptive phrases.
-- Avoid combining multiple concepts into one phrase.
-- Each concept should be searchable independently in DBLP/OpenAlex.
+- Do not use Boolean operators (AND, OR, NOT).
+- Do not generate descriptive and invented phrases.
+- Each concept should be independently searchable in
+  OpenAlex, DBLP, and Semantic Scholar.
 
 
 Return ONLY a JSON array of strings."""
