@@ -20,8 +20,7 @@ This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstr
 - 🤖 Extract paper summaries using LLMs
 - 🎯 Identify the target object of each paper
 - 🚦 Filter out irrelevant search results
-- 🏷️ Automatically discover and label research themes
-- 📂 Categorize papers into the discovered themes
+- 📂 Automatically categorize papers into research themes
 - 📊 Export results to a structured Excel workbook
 - 🔌 Support local and cloud-hosted LLMs
 
@@ -54,7 +53,7 @@ Relevance Filtering
 (remove unrelated papers)
       │
       ▼
-Theme Discovery & Categorization
+Theme Categorization
 (generate research themes and assign papers)
       │
       ▼
