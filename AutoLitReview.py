@@ -320,7 +320,7 @@ Output ONLY a JSON object shaped exactly like:
 
 Papers:
 {block}"""
-    result = llm_json(prompt, temperature=0.0, max_tokens=10000)
+    result = llm_json(prompt, temperature=0.0, max_tokens=12000)
     result.setdefault("categories", {})
     result.setdefault("assignments", {})
     return result
