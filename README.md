@@ -10,6 +10,7 @@ The result is a categorized Excel report containing relevant papers, summaries, 
 
 This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstracts are typically only a few hundred tokens long — versus several thousand for a full paper — the approach substantially reduces token consumption and inference costs. In addition, papers are analyzed in small batches, which reduces the number of API calls and keeps each response within the model's output limit.
 
+
 ---
 
 ## Features
@@ -116,6 +117,7 @@ python AutoLitReview.py \
     --year-from 2024 \
     --provider vllm
 ```
+Repeated executions may produce different, yet equally reasonable, search results.
 
 ### Providing Your Own Search Concepts
 
