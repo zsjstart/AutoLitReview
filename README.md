@@ -125,7 +125,7 @@ research idea automatically. If you'd rather supply your own, use the
 
 ```bash
 python AutoLitReview.py "Automated OSINT-based profiling for targeted phishing" \
-    --manual-concepts "footprinting" "OSINT" "attack surface discovery"
+    --manual-concepts "footprinting" "OSINT" "attack surface discovery" "spear phishing"
 ```
 
 
