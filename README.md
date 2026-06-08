@@ -124,18 +124,10 @@ research idea automatically. If you'd rather supply your own, use the
 `--manual-concepts` flag:
 
 ```bash
-python3 autolitreview.py "your research idea" \
-    --manual-concepts "footprinting" "corporate OSINT" "attack surface discovery"
+python AutoLitReview.py "Automated OSINT-based profiling for targeted phishing" \
+    --manual-concepts "footprinting" "OSINT" "attack surface discovery"
 ```
 
-This bypasses automatic concept generation and searches OpenAlex using exactly
-the concepts you provide.
-
-**Tip:** you can write these concepts yourself, or generate them with any chatbot
-(e.g. ChatGPT, Gemini, or Claude) and paste the results in. Providing your own
-concepts is useful when you know the field's terminology, want reproducible
-results across runs, or need to steer the search toward a specific angle that the
-automatic concepts miss.
 
 ---
 
