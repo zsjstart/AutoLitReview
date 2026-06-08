@@ -8,6 +8,7 @@ Instead of manually crafting search queries, screening dozens of papers, and org
 
 The result is a categorized Excel report containing relevant papers, summaries, extracted target objects, venue information, and research categories.
 
+
 ---
 
 ## Features
@@ -59,6 +60,10 @@ Theme Discovery & Categorization
 Excel Report
 (papers, summaries, categories, and sources)
 ```
+---
+## Token Efficiency
+
+This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstracts are typically only a few hundred tokens long, the approach substantially reduces token consumption and inference costs compared to processing full papers.
 
 
 ---
@@ -224,6 +229,7 @@ AutoLitReview automates much of this process, allowing researchers to move from 
 
 - Results depend on the coverage, metadata quality, and search relevance of OpenAlex.
 - LLM quality affects concept generation, paper summarization, relevance filtering, and thematic categorization.
+- Commercial LLM APIs may incur token costs, but appropriately configuring `--concepts` and `--per-concept can help control token usage and reduce expenses.
   
 ---
 
