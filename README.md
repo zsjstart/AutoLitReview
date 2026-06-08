@@ -117,6 +117,26 @@ python AutoLitReview.py \
     --provider vllm
 ```
 
+### Providing Your Own Search Concepts
+
+By default, AutoLitReview generates literature-search concepts from your
+research idea automatically. If you'd rather supply your own, use the
+`--manual-concepts` flag:
+
+```bash
+python3 autolitreview.py "your research idea" \
+    --manual-concepts "footprinting" "corporate OSINT" "attack surface discovery"
+```
+
+This bypasses automatic concept generation and searches OpenAlex using exactly
+the concepts you provide.
+
+**Tip:** you can write these concepts yourself, or generate them with any chatbot
+(e.g. ChatGPT, Gemini, or Claude) and paste the results in. Providing your own
+concepts is useful when you know the field's terminology, want reproducible
+results across runs, or need to steer the search toward a specific angle that the
+automatic concepts miss.
+
 ---
 
 ## Example Output
