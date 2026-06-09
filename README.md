@@ -137,10 +137,10 @@ python AutoLitReview.py "Automated OSINT-based profiling for targeted phishing" 
 
 ```text
 Concepts:
-['LLM phishing',
- 'Automated OSINT',
- 'Profile inference',
- 'Targeted social engineering']
+['open-source intelligence',
+'spear phishing',
+'user profiling',
+'social engineering']
 
 Collected 39 unique papers
 
