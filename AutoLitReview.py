@@ -1,26 +1,34 @@
 """
-Research idea -> multi-concept OpenAlex search -> gpt-oss analysis -> grouped Excel.
+AutoLitReview - turn a research idea into a structured, grouped literature review.
+
+Research idea -> multi-concept search -> LLM analysis -> grouped Excel report.
 
 Pipeline:
-  1. Concept extraction : LLM generates N concepts from the idea (no selection pass).
-  2. Collection         : OpenAlex search per concept, year-filtered AND optionally
-                          restricted to a research field (--domain), pooled + deduped by DOI.
+  1. Concept extraction : LLM generates N search concepts from the idea (no selection pass).
+  2. Collection         : per concept, year-filtered, pooled and deduped by DOI/title.
+                          OpenAlex additionally supports a hard field filter (--domain)
+                          and a reputable-venue filter (--core-only). 
   3. Phase 1 (local)    : chunked LLM calls extract per-paper summary + target object.
   4. Relevance gate     : one cheap LLM call drops papers not genuinely about the idea.
   5. Phase 2 (global)   : one LLM call discovers categories across the survivors, then assigns.
-  6. Excel              : Papers sheet (Title, Year, Summary, Target Object, Category, Source)
-                          + a discovered-Categories sheet.
+  6. Excel              : Papers sheet (Title, Year, Summary, Target Object, Category,
+                          Venue, Venue Quality, Source) + a discovered-Categories sheet.
+
+LLM provider is selectable with --provider:
+  vllm (default, local gpt-oss) | openai | gemini | claude
+Each non-local provider needs its key: OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY.
 
 Requirements:
   pip install openai requests openpyxl
   export OPENALEX_API_KEY=...        (free key at openalex.org/settings/api)
-  a vLLM server running gpt-oss-120b on an OpenAI-compatible endpoint.
+  For --provider vllm: a vLLM server running gpt-oss on an OpenAI-compatible endpoint.
 
 Usage:
-  python llm_papers_collector_and_processor.py "your research idea" --concepts 4
-  python llm_papers_collector_and_processor.py "your idea" --domain cybersecurity \
+  python AutoLitReview.py "your research idea" --concepts 4
+  python AutoLitReview.py "your idea" --domain cybersecurity \
          --concepts 4 --per-concept 7 --year-from 2020 --year-to 2026
-  python llm_papers_collector_and_processor.py "your idea" \
+  python AutoLitReview.py "your idea" --provider gemini --domain cybersecurity
+  python AutoLitReview.py "your idea" \
          --manual-concepts "OSINT" "attribute inference" "de-anonymization"
 """
 import os
