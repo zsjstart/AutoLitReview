@@ -142,12 +142,13 @@ def extract_concepts(idea, n):
     gen_prompt = f"""Given this research idea:
 {idea}
 
-Generate {n} literature-search concepts for finding papers ON THIS SPECIFIC TOPIC.
+Generate {n} literature-search concepts for finding papers on this specific topic.
 
 Requirements:
 - Each concept must be 1–3 words.
 - Use terminology commonly found in paper titles, abstracts,
   author keywords, or research taxonomies.
+- Name the topic, task, or problem — not the tool or model used to study it.
 - Prefer established academic concepts.
 - Do not use Boolean operators (AND, OR, NOT).
 - Do not generate descriptive and invented phrases.
