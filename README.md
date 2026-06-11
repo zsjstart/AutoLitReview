@@ -6,7 +6,7 @@ AutoLitReview is an AI-powered literature discovery pipeline that automatically 
 
 Instead of manually crafting search queries, screening dozens of papers, and organizing findings into spreadsheets, AutoLitReview uses large language models to automate much of the workflow.
 
-The result is a categorized report (an Excel workbook in API Mode) containing relevant papers, summaries, extracted target objects, venue information, and research categories.
+The result is a categorized report containing relevant papers, summaries, extracted target objects, venue information, and research categories.
 
 This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstracts are typically only a few hundred tokens long — versus several thousand for a full paper — the approach substantially reduces token consumption and inference costs. In addition, papers are analyzed in small batches, which reduces the number of API calls and keeps each response within the model's output limit.
 
@@ -23,6 +23,7 @@ This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstr
 - 📂 Automatically categorize papers into research themes
 - 📊 Export results to a structured Excel workbook (API Mode)
 - 🔌 Support local and cloud-hosted LLMs
+- 💬 Run through APIs or directly in chatbot interfaces
 
 ---
 
@@ -57,7 +58,7 @@ Theme Categorization
 (generate research themes and assign papers)
       │
       ▼
-Report
+Excel Report
 (papers, summaries, categories, and sources)
 ```
 
