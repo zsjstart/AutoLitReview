@@ -10,6 +10,8 @@ The result is a categorized report containing relevant papers, summaries, extrac
 
 This tool analyzes OpenAlex abstracts instead of full paper texts. Because abstracts are typically only a few hundred tokens long — versus several thousand for a full paper — the approach substantially reduces token consumption and inference costs. In addition, papers are analyzed in small batches, which reduces the number of API calls and keeps each response within the model's output limit.
 
+**If this project helped your research or work, a ⭐ would be greatly appreciated.**
+
 ---
 
 ## Features
@@ -257,7 +259,7 @@ Retrieval command, by platform:
 Supported chatbots include ChatGPT, Claude, Gemini, DeepSeek, Qwen, and other capable LLM
 assistants.
 
-#### Advantages
+### Advantages
 
 * No LLM API key required
 * No local model deployment required
