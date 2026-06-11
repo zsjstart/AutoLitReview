@@ -180,7 +180,7 @@ def main():
                 ("title", "abstract", "year", "source", "venue", "venue_quality")}
                for p in papers]
     text = json.dumps(payload, indent=2, ensure_ascii=False)
-    print(text)                       # stdout = 干净的 JSON，可直接复制
+    #print(text)                       # stdout = 干净的 JSON，可直接复制
     if a.out:
         with open(a.out, "w", encoding="utf-8") as f:
             f.write(text)
