@@ -45,7 +45,7 @@
 14 business, management & accounting      27 medicine
 15 chemical engineering                   28 neuroscience
 16 chemistry                              29 nursing
-17 computer science (cybersecurity)       30 pharmacology, toxicology & pharma.
+17 computer science                       30 pharmacology, toxicology & pharma.
 18 decision sciences                      31 physics & astronomy
 19 earth & planetary sciences             32 psychology
 20 economics, econometrics & finance      33 social sciences
