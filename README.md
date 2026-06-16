@@ -98,9 +98,13 @@ PowerShell, `$env:OPENALEX_API_KEY="YOUR_KEY"`.
 | OpenAI API | `openai` | GPT-4o |
 | Google Gemini API | `gemini` | Gemini Flash |
 | Anthropic API | `claude` | Claude Sonnet |
+| Self-hosted (any OpenAI-compatible endpoint) | `self-hosted` | any model on the server |
 
 The OpenAI, Gemini, and Anthropic providers are reached through their respective
-APIs (Gemini and Anthropic via their OpenAI-compatible endpoints).
+APIs (Gemini and Anthropic via their OpenAI-compatible endpoints). The
+`self-hosted` provider works with any OpenAI-compatible API endpoint (e.g.
+vLLM, LM Studio, LiteLLM, or a hosted gateway) and requires `--base-url`;
+use `--model` to specify the model name the server expects.
 
 ---
 
@@ -112,6 +116,44 @@ APIs (Gemini and Anthropic via their OpenAI-compatible endpoints).
 python AutoLitReview.py \
     "LLM-powered phishing attacks" \
     --provider vllm
+```
+
+### Self-Hosted LLM (any OpenAI-compatible endpoint)
+
+```bash
+python AutoLitReview.py \
+    "LLM-powered phishing attacks" \
+    --provider self-hosted \
+    --base-url https://yoururl \
+    --api-key yourapikey \
+    --model yourmodel
+```
+
+### OpenAI API
+
+```bash
+python AutoLitReview.py \
+    "LLM-powered phishing attacks" \
+    --provider openai \
+    --model gpt-4o
+```
+
+### Google Gemini API
+
+```bash
+python AutoLitReview.py \
+    "LLM-powered phishing attacks" \
+    --provider gemini \
+    --model gemini-3.5-flash
+```
+
+### Anthropic API
+
+```bash
+python AutoLitReview.py \
+    "LLM-powered phishing attacks" \
+    --provider claude \
+    --model claude-sonnet-4-6
 ```
 
 ### Example: Cybersecurity Literature Search
@@ -192,8 +234,10 @@ Done -> papers_grouped.xlsx
 | `--year-to` | Latest publication year |
 | `--domain` | Restrict search to an OpenAlex field |
 | `--core-only` | Keep only papers from core venues |
-| `--provider` | LLM backend (`vllm`, `openai`, `gemini`, `claude`) |
+| `--provider` | LLM backend (`vllm`, `openai`, `gemini`, `claude`, `self-hosted`) |
 | `--model` | Override default model |
+| `--base-url` | Base URL for the LLM endpoint (required for `self-hosted`, overrides default for other providers) |
+| `--api-key` | API key for the LLM endpoint (for self-hosted and cloud providers; also reads provider-specific env vars) |
 | `--manual-concepts` | Use custom search concepts |
 | `--out` | Output Excel filename |
 
@@ -270,7 +314,7 @@ assistants.
 | Feature | API Mode | Chat Mode |
 |---------|----------|-----------|
 | LLM API key required | Yes | No |
-| OpenAlex key | Optional (recommended) | Optional (recommended) |
+| OpenAlex key | Mandatory | Optional (recommended) |
 | Local model deployment | No | No |
 | Runs a local command | Yes (the whole script) | Yes (one retrieval step) |
 | Fully automated | Yes | No |

@@ -16,7 +16,8 @@ Pipeline:
 
 LLM provider is selectable with --provider:
   vllm (default, local gpt-oss) | openai | gemini | claude
-Each non-local provider needs its key: OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY.
+  | self-hosted (--base-url required) | predefined self-hosted
+Each non-local provider needs its key: OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY, or pass --api-key. Self-hosted also reads SELF_HOSTED_API_KEY.
 
 Requirements:
   pip install openai requests openpyxl
@@ -52,23 +53,44 @@ PROVIDER_DEFAULTS = {
     "claude": ("https://api.anthropic.com/v1/",                         "ANTHROPIC_API_KEY", "claude-sonnet-4-6",   False),
 }
 
-def configure_provider(provider, model_override=None):
+SELF_HOSTED_DEFAULTS = {
+    # provider:  (base_url, key_env, default_model, has_reasoning_content)
+}
+
+def configure_provider(provider, model_override=None, base_url_override=None, api_key_override=None):
     global client, MODEL, HAS_REASONING_CONTENT
     provider = (provider or "vllm").lower()
-    if provider not in PROVIDER_DEFAULTS:
-        raise SystemExit(f"Unknown provider '{provider}'. "
-                         f"Choose from: {', '.join(PROVIDER_DEFAULTS)}")
-    base_url, key_env, default_model, has_rc = PROVIDER_DEFAULTS[provider]
 
-    if key_env:
-        key = os.environ.get(key_env, "")
-        if not key:
-            raise SystemExit(f"Set {key_env} for provider '{provider}'.")
+    if provider == "self-hosted":
+        if not base_url_override:
+            raise SystemExit("Provider 'self-hosted' requires --base-url.")
+        base_url = base_url_override.rstrip("/")
+        key = api_key_override or os.environ.get("SELF_HOSTED_API_KEY", "EMPTY")
+        default_model = "default"
+        has_rc = False
+    elif provider in SELF_HOSTED_DEFAULTS:
+        base_url, key_env, default_model, has_rc = SELF_HOSTED_DEFAULTS[provider]
+        if key_env:
+            key = api_key_override or os.environ.get(key_env, "")
+            if not key:
+                raise SystemExit(f"Set {key_env} or pass --api-key for provider '{provider}'.")
+        else:
+            key = api_key_override or "EMPTY"
+        if base_url_override:
+            base_url = base_url_override.rstrip("/")
+    elif provider in PROVIDER_DEFAULTS:
+        base_url, key_env, default_model, has_rc = PROVIDER_DEFAULTS[provider]
+        if key_env:
+            key = os.environ.get(key_env, "")
+            if not key:
+                raise SystemExit(f"Set {key_env} for provider '{provider}'.")
+        else:
+            key = "EMPTY"
+        if provider == "vllm":
+            base_url = os.environ.get("LLM_BASE_URL", base_url)
     else:
-        key = "EMPTY"   # local vLLM needs no real key
-
-    if provider == "vllm":
-        base_url = os.environ.get("LLM_BASE_URL", base_url)
+        all_providers = sorted(set(list(PROVIDER_DEFAULTS) + list(SELF_HOSTED_DEFAULTS) + ["self-hosted"]))
+        raise SystemExit(f"Unknown provider '{provider}'. Choose from: {', '.join(all_providers)}")
 
     client = OpenAI(base_url=base_url, api_key=key)
     MODEL = model_override or os.environ.get("LLM_MODEL") or default_model
@@ -499,13 +521,22 @@ def parse_args():
     p.add_argument("--core-only", action="store_true",
                    help="keep only papers from 'core' (reputable) venues. NOTE: this "
                         "excludes preprint servers like arXiv, so recent preprints are lost.")
+    all_providers = sorted(set(list(PROVIDER_DEFAULTS) + list(SELF_HOSTED_DEFAULTS) + ["self-hosted"]))
     p.add_argument("--provider", default="vllm",
-                   choices=["vllm", "openai", "gemini", "claude"],
-                   help="LLM backend (default vllm = local gpt-oss). openai/gemini/claude "
-                        "need OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY respectively.")
+                   choices=all_providers,
+                   help="LLM backend (default vllm = local gpt-oss). "
+                        "Use 'self-hosted' with --base-url for any OpenAI-compatible endpoint. "
+                        "Pre-configured self-hosted: " + ", ".join(sorted(SELF_HOSTED_DEFAULTS)))
     p.add_argument("--model", default=None,
                    help="override the model name for the chosen provider "
                         "(else a sensible per-provider default is used)")
+    p.add_argument("--base-url", default=None,
+                   help="base URL for the LLM endpoint (required for 'self-hosted' provider, "
+                        "overrides default for pre-configured self-hosted providers). "
+                        "Trailing /v1 is added automatically if missing.")
+    p.add_argument("--api-key", default=None,
+                   help="API key for the LLM endpoint (for self-hosted providers that require "
+                        "authentication; also reads SELF_HOSTED_API_KEY or provider-specific env vars)")
     p.add_argument("--manual-concepts", nargs="+", default=None,
                    help="supply your own concepts, bypassing auto-extraction")
     p.add_argument("--out", default="papers_grouped.xlsx",
@@ -517,7 +548,7 @@ if __name__ == "__main__":
     if not OPENALEX_KEY:
         raise SystemExit("Set OPENALEX_API_KEY (free key at openalex.org/settings/api)")
     a = parse_args()
-    configure_provider(a.provider, a.model)
+    configure_provider(a.provider, a.model, a.base_url, a.api_key)
     run(a.idea, concepts_n=a.concepts, per_concept=a.per_concept,
         year_from=a.year_from, year_to=a.year_to, domain=a.domain,
         core_only=a.core_only, manual_concepts=a.manual_concepts, out=a.out)
