@@ -514,9 +514,10 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    if not OPENALEX_KEY:
-        raise SystemExit("Set OPENALEX_API_KEY (free key at openalex.org/settings/api)")
     a = parse_args()
+    if not OPENALEX_KEY:
+        print("Warning: OPENALEX_API_KEY not set. Requests may be rate-limited. "
+              "Get a free key at openalex.org/settings/api")
     configure_provider(a.provider, a.model)
     run(a.idea, concepts_n=a.concepts, per_concept=a.per_concept,
         year_from=a.year_from, year_to=a.year_to, domain=a.domain,
