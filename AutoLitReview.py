@@ -194,8 +194,9 @@ def search_concept(concept, per_concept, year_from, year_to, field_id=None,
         "per-page": per_concept,
         "filter": ",".join(filters),
         "sort": "relevance_score:desc",
-        "api_key": OPENALEX_KEY,
     }
+                     
+    if OPENALEX_KEY: params["api_key"] = OPENALEX_KEY
     resp = requests.get("https://api.openalex.org/works", params=params, timeout=30)
     resp.raise_for_status()
     out = []
