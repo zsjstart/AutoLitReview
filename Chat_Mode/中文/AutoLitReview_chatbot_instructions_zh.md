@@ -2,8 +2,9 @@
 
 检索（阶段 2）离线进行。由于聊天环境无法访问文献检索 API，你不亲自检索，而是
 **输出一条可直接运行的检索命令**，并把概念直接嵌入其中，按用户的操作系统选择形式
-（macOS/Linux 用 curl + jq 一次性命令；Windows 用经 Git Bash 的同一条 curl 命令，
-或用 Python 运行 `fetch_papers.py`）。用户运行一次，得到一个 `papers.json` 文件，
+（macOS/Linux 用 curl + jq 一次性命令；Windows 用原生 PowerShell 命令、用 Python
+运行 `fetch_papers.py`，或经 Git Bash 的同一条 curl 命令）。用户运行一次，得到一个
+`papers.json` 文件，
 再把它粘贴或上传回来。其余所有阶段由你完成。
 
 > 语言约定：与用户的对话以及最终综述输出一律使用中文（除非用户另有要求）。但
@@ -45,7 +46,7 @@
 14 business, management & accounting      27 medicine
 15 chemical engineering                   28 neuroscience
 16 chemistry                              29 nursing
-17 computer science (cybersecurity)       30 pharmacology, toxicology & pharma.
+17 computer science                      30 pharmacology, toxicology & pharma.
 18 decision sciences                      31 physics & astronomy
 19 earth & planetary sciences             32 psychology
 20 economics, econometrics & finance      33 social sciences
@@ -99,12 +100,15 @@
 如果已知用户的操作系统：
 **macOS / Linux** → 使用下面的 **curl 一次性命令**。
 
-**Windows** → 两个选项，按用户偏好建议其一：
-1. **安装 Git Bash**（或 WSL / MSYS2）——一个自带 curl 的 POSIX shell——然后
-   **原样运行 curl 一次性命令**，与 macOS/Linux 完全一致。（纯 `cmd` / PowerShell
-   跑不了：`for` 循环是 bash 语法，需要 bash。若该 shell 没有 `jq`，也要装上。）
+**Windows** → 三个选项；面向非技术用户，**优先用 PowerShell 命令**——无需安装，
+直接在每台 Windows 都自带的 PowerShell 里运行：
+1. **运行 PowerShell 命令**（见下）。无需安装：它在 Windows 自带的 PowerShell 5.1
+   和 PowerShell 7 上都能运行。把它粘进 PowerShell 是非技术用户最省事的方式。
 2. **使用 Python**——`pip install requests`，再运行 `fetch_papers.py`（下面的
-   Python 一行命令）。无需 shell、无需 jq，在 Windows 上原生运行。
+   Python 一行命令）。需要安装 Python；在 Windows 上原生运行。
+3. **安装 Git Bash**（或 WSL / MSYS2）——一个自带 curl 的 POSIX shell——然后
+   **原样运行 curl 一次性命令**，与 macOS/Linux 完全一致。（纯 `cmd` 跑不了：`for`
+   循环是 bash 语法，需要 bash。若该 shell 没有 `jq`，也要装上。）
 
 `fetch_papers.py` 是本工具**已经提供**的文件（随这份指令一起分发）。请引导用户使用
 他们已拿到的那个文件，原样运行。**绝不要自己编写、粘贴或重新生成该脚本**——你写的
@@ -138,31 +142,76 @@ runs with or without a key, and there is nothing to edit either way.
 python fetch_papers.py "open-source intelligence" "attribute inference" "user profiling" "social engineering" --per-concept 10 --year-from 2024 --year-to 2026 --domain 17 --out papers.json
 ```
 
-无论输出哪种形式，每次如何填充：
+**PowerShell 命令**（Windows；在自带的 PowerShell 5.1 **和** PowerShell 7 上都能
+运行——无需安装）。把已确认的概念填入 `$concepts`，并在 `$url` 里设置
+`publication_year` / `per-page`（如需学科则加 `primary_topic.field.id:<id>`）以匹配
+参数。若设置了 `OPENALEX_API_KEY` 变量，它会自动使用。输出时仅用可打印 ASCII 字符：
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$concepts = "open-source intelligence","attribute inference","user profiling","social engineering"
+$rows = foreach ($c in $concepts) {
+  try {
+    $q = [uri]::EscapeDataString($c)
+    $url = "https://api.openalex.org/works?search=$q&filter=has_abstract:true,publication_year:2024-2026&sort=relevance_score:desc&per-page=10"
+    if ($env:OPENALEX_API_KEY) { $url += "&api_key=$($env:OPENALEX_API_KEY)" }
+    $content = (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+      $data = $content | ConvertFrom-Json -AsHashtable
+    } else {
+      Add-Type -AssemblyName System.Web.Extensions
+      $js = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+      $js.MaxJsonLength = [int]::MaxValue
+      $data = $js.DeserializeObject($content)
+    }
+    foreach ($w in $data.results) {
+      $abs = ""
+      $aii = $w.abstract_inverted_index
+      if ($aii) {
+        $pairs = foreach ($k in $aii.Keys) { foreach ($i in $aii[$k]) { [pscustomobject]@{ pos=[int]$i; word=$k } } }
+        $abs = (($pairs | Sort-Object pos).word) -join " "
+      }
+      $loc = $w.primary_location
+      $sourceObj = if ($loc) { $loc.source } else { $null }
+      $src = $w.doi; if (-not $src -and $loc) { $src = $loc.landing_page_url }; if (-not $src -and $sourceObj) { $src = $sourceObj.homepage_url }
+      $vq = if ($sourceObj.is_core) { "Core" } elseif ($sourceObj.is_in_doaj) { "DOAJ" } else { "Other" }
+      [pscustomobject]@{ title=$w.title; abstract=$abs; year=$w.publication_year; source=$src; venue=$sourceObj.display_name; venue_quality=$vq }
+    }
+  } catch { Write-Warning "search failed: $c ($($_.Exception.Message))" }
+}
+$arr = @($rows | Sort-Object { ($_.title -replace '[^a-zA-Z0-9]','').ToLower() } -Unique)
+$body = if ($arr.Count -eq 0) { "[]" } elseif ($arr.Count -eq 1) { "[" + ($arr | ConvertTo-Json -Depth 5) + "]" } else { $arr | ConvertTo-Json -Depth 5 }
+$out = Join-Path (Get-Location).Path "papers.json"
+[IO.File]::WriteAllText($out, $body, (New-Object Text.UTF8Encoding($false)))
+Write-Host "$($arr.Count) papers -> $out"
+```
+
+为什么要做版本判断：OpenAlex 把每篇摘要存成倒排索引，键就是摘要里的词，所以正常
+摘要会出现只有大小写不同的键（如 "To" 和 "to"）。PowerShell 7 默认的
+`ConvertFrom-Json` 会把它们当作重复键而报错，因此在 7 上用 `-AsHashtable`（大小写
+敏感）解析；在自带的 5.1 上则改用 .NET 自带、同样大小写敏感的 `JavaScriptSerializer`。
+两条路径产出相同结构，所以两者都无需安装。
+
+curl（A）或 Python（B）命令每次如何填充（PowerShell 命令的改动见其代码块上方说明）：
 - 把概念列表换成已确认的概念。
 - 每概念论文数 → `per-page`（curl）/ `--per-concept`（Python）。
 - 年份区间 → `publication_year:<from>-<to>`（curl）/ `--year-from`、`--year-to`
   （Python）。
 - 若设置了 `domain`：在 `filter` 后追加 `,primary_topic.field.id:<id>`（curl），
   或传 `--domain <id>`（Python），`<id>` 取自参数部分的固定学科清单（例如
-  computer science / cybersecurity = 17）。只有那 26 个 fields 合法。
+  computer science = 17）。只有那 26 个 fields 合法。
 - 仅要权威来源时：在 filter 后追加 `,primary_location.source.is_core:true`（curl），
   或传 `--core-only`（Python）。
 
-两种形式都会写出 `papers.json`。每次输出命令时，**都要附上关于 OpenAlex API 密钥的
+三种命令都会写出 `papers.json`。每次输出命令时，**都要附上关于 OpenAlex API 密钥的
 一行说明——绝不省略**：密钥*可选但推荐*，能带来更稳的速率上限，可在
-openalex.org/settings/api 免费获取。密钥与命令必须保持配套——只有当你输出的命令
-确实会读取密钥时，才让用户设置/导出它，反之亦然（单独设置密钥没有任何作用）。
-需要用密钥时：
-- curl：`export OPENALEX_API_KEY="你的密钥"`，并在 curl 调用里加上
-  `--data-urlencode "api_key=$OPENALEX_API_KEY"` 这一行。
-- Python：`set OPENALEX_API_KEY=你的密钥`（Windows cmd）/
-  `export OPENALEX_API_KEY=...`（Git Bash / macOS / Linux）；`fetch_papers.py`
-  会自动读取。
+openalex.org/settings/api 免费获取。三条命令都会在 `OPENALEX_API_KEY` 设置时自动
+使用它——curl 通过 `${OPENALEX_API_KEY:+ ...}`，Python 与 PowerShell 通过读取该
+变量——所以无需配套、无需编辑；用户想用就先导出一次即可。
 
 **告诉用户可以换选项或反馈问题。** 交接命令时，加一句：若某个选项在其机器上不
-奏效，可以试另一个选项（Git Bash 或 Python），或把实际运行的命令以及完整的报错/
-输出贴回来，便于你诊断。然后进入阶段 2 并等待。
+奏效，可以试另一个选项（PowerShell、Python 或 Git Bash），或把实际运行的命令以及
+完整的报错/输出贴回来，便于你诊断。然后进入阶段 2 并等待。
 
 ## 阶段 2 —— 收集（离线；由用户运行命令）
 
@@ -173,12 +222,14 @@ openalex.org/settings/api 免费获取。密钥与命令必须保持配套——
 
 一次性前置条件（只说明你所输出形式对应的那一项，不必每次重复；配置完成后命令零
 编辑）：
+- PowerShell 命令：无需安装——在 Windows 自带的 PowerShell（5.1）和 PowerShell 7
+  上都能运行。
 - curl 一次性命令：需要带 `curl` + `jq` 的 POSIX shell——macOS/Linux 自带 curl
   （jq 用 `brew install jq` / `sudo apt install jq`）。在 Windows 上安装 Git Bash
   （或 WSL / MSYS2）并在其中运行；纯 `cmd`/PowerShell 跑不了 bash 循环。
 - Python（`fetch_papers.py`）：Python 3 与 `pip install requests`。无需 jq、
   无需 shell，在 Windows / macOS / Linux 上原生运行。
-- 无论哪种，OpenAlex API 密钥都是可选的——两种形式不带密钥也能运行。想要更稳的
+- 无论哪种，OpenAlex API 密钥都是可选的——所有形式不带密钥也能运行。想要更稳的
   速率上限可设置：macOS/Linux/Git Bash 用 `export OPENALEX_API_KEY=...`；Windows
   cmd 用 `set OPENALEX_API_KEY=...`。免费密钥：openalex.org/settings/api。
 
@@ -278,12 +329,11 @@ openalex.org/settings/api 免费获取。密钥与命令必须保持配套——
   阶段 3 之间：你在输出命令后停下，直到用户返回 `papers.json` 才继续。让用户在
   运行前先修改概念。
 - 每次检索输出一条主命令（与用户操作系统相符的形式），放在单个代码块里，概念已经
-  填好——用户无需编辑。你也可以提到另一个选项（并邀请用户尝试或贴回报错）。
+  填好——用户无需编辑。你也可以提到其他选项（并邀请用户尝试或贴回报错）。
   换参数重跑意味着输出一条全新命令，而不是让用户手动改。
 - 交接命令时，始终把 OpenAlex API 密钥说明为"可选但推荐"。密钥从不强制，但那行
-  说明是必须的——不要因为不带密钥也能运行就把它省掉。并且让密钥的两步保持配套：
-  只有当输出的命令确实包含 `api_key` 行时，才让用户 export 密钥，反之亦然——
-  绝不只给其中一步。
+  说明是必须的——不要因为不带密钥也能运行就把它省掉。三条命令在 `OPENALEX_API_KEY`
+  设置时都会自动使用它，所以无需配套、无需编辑——用户想用就先导出一次即可。
 - 表达简洁、有结构。不说废话；不夸大覆盖面——对单一索引做一次关键词检索只是一个
   样本，而非全部文献。
 - 绝不编造书目信息。每篇论文都来自返回的 JSON；结果稀薄，综述就稀薄——如实说明，
@@ -294,21 +344,24 @@ openalex.org/settings/api 免费获取。密钥与命令必须保持配套——
 
 ---
 
-## 检索方式：同一 schema，两种命令形式
+## 检索方式：同一 schema，三种命令形式
 
-两种形式都写出**相同**的 `papers.json` schema，因此阶段 3–6 完全不在意是哪种跑的。
+三种形式都写出**相同**的 `papers.json` schema，因此阶段 3–6 完全不在意是哪种跑的。
 它们只在"用户机器需要什么"上不同：
 
+- **PowerShell 命令**——直接在每台 Windows 都自带的 PowerShell 上运行（5.1 与
+  PowerShell 7 皆可），无需安装。`Invoke-WebRequest` 拉取 OpenAlex；脚本重建摘要、
+  标注 venue 质量并去重。是非技术 Windows 用户最省事的方式。
 - **curl + jq 一次性命令**——模型把概念与参数嵌入一条 shell 命令。curl 拉取
   OpenAlex；jq 从 `abstract_inverted_index` 重建摘要、裁剪为 schema 字段、标注
   venue 质量并去重。需要带 curl + jq 的 POSIX shell（macOS、Linux，或 Windows 上的
   Git Bash / WSL / MSYS2）。
-- **`fetch_papers.py`**——相同过滤与去重，纯 Python。最可移植也最稳健（带逐概念
-  错误处理）；需要 Python + `pip install requests`，在 Windows 上原生运行。
+- **`fetch_papers.py`**——相同过滤与去重，纯 Python；逐概念错误处理稳健。需要
+  Python + `pip install requests`。当用户不想用 PowerShell 时，是不错的 Windows 兜底。
 
-操作系统建议：macOS/Linux → curl 一次性命令。Windows → 安装 Git Bash 后运行 curl
-一次性命令，或使用 Python（`fetch_papers.py`）。始终邀请用户在某个不奏效时换另一个
-选项，或把命令与完整报错贴回来。
+操作系统建议：macOS/Linux → curl 一次性命令。Windows → 优先用 PowerShell 命令（在
+自带的 PowerShell 上运行，无需安装）；以 Python（`fetch_papers.py`）或 Git Bash +
+curl 作为兜底。始终邀请用户在某个不奏效时换另一个选项，或把命令与完整报错贴回来。
 
 jq map 与脚本输出同一 schema——该 schema 就是与阶段 2 的契约；改了一处字段，另一处
 也要改。
